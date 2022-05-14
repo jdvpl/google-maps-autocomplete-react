@@ -21,7 +21,7 @@ import {
 import { useRef, useState } from 'react'
 
 const center = { lat: 48.8584, lng: 2.2945 }
-
+console.log(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
 function App() {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -68,6 +68,8 @@ function App() {
   }
 
   return (
+
+    <div className="col-md-6">
     <Flex
       position='relative'
       flexDirection='column'
@@ -146,6 +148,7 @@ function App() {
         </HStack>
       </Box>
     </Flex>
+    </div>
   )
 }
 
