@@ -1,13 +1,7 @@
 import {
-  Box,
-  Button,
-  ButtonGroup,
-  Flex,
-  HStack,
   IconButton,
   Input,
   SkeletonText,
-  Text,
 } from '@chakra-ui/react'
 import { FaLocationArrow, FaTimes } from 'react-icons/fa'
 
@@ -18,13 +12,16 @@ import {
   Autocomplete,
   DirectionsRenderer,
 } from '@react-google-maps/api'
+import {getLatLng,getGeocode} from 'use-places-autocomplete';
 import { useRef, useState } from 'react'
 
 const center = { lat: 4.6777843, lng: -74.0951612 }
 function App() {
+  const google = window.google;
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: ['places'],
+    
   })
 
   const [map, setMap] = useState(/** @type google.maps.Map */ (null))
@@ -33,26 +30,38 @@ function App() {
   const [duration, setDuration] = useState('')
 
   /** @type React.MutableRefObject<HTMLInputElement> */
-  const originRef = useRef()
+  const originRef = useRef("kakaroto")
   /** @type React.MutableRefObject<HTMLInputElement> */
   const destiantionRef = useRef()
 
-  if (!isLoaded) {
-    return <SkeletonText />
-  }
+
 
   async function calculateRoute() {
-    if (originRef.current.value === '' || destiantionRef.current.value === '') {
-      return
-    }
+    // if (originRef.current.value === '' || destiantionRef.current.value === '') {
+    //   return
+    // }
     // eslint-disable-next-line no-undef
+ 
+    console.log(google.maps)
     const directionsService = new google.maps.DirectionsService()
+
     const results = await directionsService.route({
-      origin: originRef.current.value,
-      destination: destiantionRef.current.value,
+      origin: '3.60971, -74.08175',
+      destination: '4.60971, -74.08175',
+      
       // eslint-disable-next-line no-undef
       travelMode: google.maps.TravelMode.DRIVING,
     })
+
+    console.log(results)
+    let address='3.60971, -74.08175';
+    const data=await getGeocode({address})
+    console.log(data[0])
+    const data2=getLatLng(data[0])
+    console.log(data2) //get latituf and longitude
+    console.log(results);
+    console.log(results.routes[0].legs[0].start_location)
+
     setDirectionsResponse(results)
     setDistance(results.routes[0].legs[0].distance.text)
     setDuration(results.routes[0].legs[0].duration.text)
@@ -65,18 +74,66 @@ function App() {
     originRef.current.value = ''
     destiantionRef.current.value = ''
   }
+  const options = {
+    componentRestrictions: { country: "co" },
+    fields: ["address_components", "geometry", "icon", "name"],
+    strictBounds: false,
+    types: ["establishment"],
+  };
+  return isLoaded &&(
 
-  return (
+    <>
 
-    <div className="col-md-6">
-    <Flex
-      position='relative'
-      flexDirection='column'
-      alignItems='center'
-      h='100vh'
-      w='100vw'
-    >
-      <Box position='absolute' left={0} top={0} h='100%' w='100%'>
+      
+      <div className="p-4 m-3 shadow bg-white rounded">
+          <div className="row">
+          <div className='col-md-5'>
+            <Autocomplete options={options}>
+              <Input type='text' placeholder='Origin' ref={originRef} />
+            </Autocomplete>
+          </div>
+          <div className='col-md-5'>
+            <Autocomplete options={options}>
+              <Input
+                type='text'
+                placeholder='Destination'
+                ref={destiantionRef}
+              />
+            </Autocomplete>
+          </div>
+            <div className="col-md-1">
+            <button className='btn btn-dark 'type='submit' onClick={calculateRoute}>
+              Calculate
+            </button>
+            </div>
+            <IconButton
+              className="col-md-1"
+              aria-label='center back'
+              icon={<FaTimes />}
+              onClick={clearRoute}
+            />
+          </div>
+
+          <div>
+          
+          </div>
+
+        <div className='d-flex justify-content-between'>
+          <p>Distance: {distance} </p>
+          <p>Duration: {duration} </p>
+          <IconButton
+            aria-label='center back'
+            icon={<FaLocationArrow />}
+            isRound
+            onClick={() => {
+              map.panTo(center)
+              map.setZoom(15)
+            }}
+          />
+        </div>
+      </div>
+
+    <div className="map">
         {/* Google Map Box */}
         <GoogleMap
           center={center}
@@ -95,59 +152,8 @@ function App() {
             <DirectionsRenderer directions={directionsResponse} />
           )}
         </GoogleMap>
-      </Box>
-      <Box
-        p={4}
-        borderRadius='lg'
-        m={4}
-        bgColor='white'
-        shadow='base'
-        minW='container.md'
-        zIndex='1'
-      >
-        <HStack spacing={2} justifyContent='space-between'>
-          <Box flexGrow={1}>
-            <Autocomplete>
-              <Input type='text' placeholder='Origin' ref={originRef} />
-            </Autocomplete>
-          </Box>
-          <Box flexGrow={1}>
-            <Autocomplete>
-              <Input
-                type='text'
-                placeholder='Destination'
-                ref={destiantionRef}
-              />
-            </Autocomplete>
-          </Box>
-
-          <ButtonGroup>
-            <Button colorScheme='pink' type='submit' onClick={calculateRoute}>
-              Calculate Route
-            </Button>
-            <IconButton
-              aria-label='center back'
-              icon={<FaTimes />}
-              onClick={clearRoute}
-            />
-          </ButtonGroup>
-        </HStack>
-        <HStack spacing={4} mt={4} justifyContent='space-between'>
-          <Text>Distance: {distance} </Text>
-          <Text>Duration: {duration} </Text>
-          <IconButton
-            aria-label='center back'
-            icon={<FaLocationArrow />}
-            isRound
-            onClick={() => {
-              map.panTo(center)
-              map.setZoom(15)
-            }}
-          />
-        </HStack>
-      </Box>
-    </Flex>
-    </div>
+      </div>
+    </>
   )
 }
 

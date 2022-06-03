@@ -1,0 +1,15 @@
+.map{
+  width: 95vw;
+  height: 95vh;
+  margin:auto;
+}
+
+.btn-pink{
+  background: #000;
+}
+
+
+
+.pac-container.pac-logo.hdpi::after{
+  display:none !important;
+}
